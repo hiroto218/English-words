@@ -581,13 +581,14 @@
             </div>
 
             <div class="options" id="optionsContainer"></div>
-            <div id="typingContainer" class="typing-container" style="display: none;">
-                <input type="text" id="typingInput" class="typing-input" placeholder="英単語を入力してください" />
+
+            <div class="typing-container" id="typingContainer">
+                <input type="text" id="typingInput" class="typing-input" placeholder="英単語を入力してください">
                 <div class="typing-feedback" id="typingFeedback"></div>
             </div>
 
             <div class="quiz-buttons">
-                <button class="btn btn-primary" id="nextButton" onclick="nextQuestion()" style="display: none;">次の問題</button>
+                <button class="btn btn-primary" id="nextButton" onclick="nextQuestion()" style="display: none;">次へ</button>
             </div>
         </div>
 
@@ -599,10 +600,10 @@
                 <div class="mistakes-title">間違えた問題</div>
                 <div id="mistakesList"></div>
             </div>
-
+            
             <div class="quiz-buttons">
-                <button class="btn btn-primary" onclick="showMainMenu()">メニューに戻る</button>
-                <button class="btn btn-secondary" onclick="restartQuiz()">もう一度</button>
+                <button class="btn btn-primary" onclick="restartQuiz()">もう一度</button>
+                <button class="btn btn-secondary" onclick="showMainMenu()">メニューに戻る</button>
             </div>
         </div>
     </div>
@@ -2236,43 +2237,7 @@
                 ]
             },
         ];
-
-      // データを保存
-        function saveData() {
-            try {
-                localStorage.setItem('vocabAppStats', JSON.stringify(stats));
-                localStorage.setItem('vocabAppMistakes', JSON.stringify(savedMistakes));
-                localStorage.setItem('vocabAppCompletedLessons', JSON.stringify([...completedLessons]));
-            } catch (error) {
-                console.log('データの保存に失敗しました:', error);
-                // localStorageが使用できない場合のフォールバック（メモリ保存）
-                window.vocabAppData = {
-                    stats: JSON.stringify(stats),
-                    mistakes: JSON.stringify(savedMistakes),
-                    completedLessons: JSON.stringify([...completedLessons])
-                };
-            }
-        }
-
-        // 統計情報を読み込み
-        function loadStats() {
-            document.getElementById('totalWords').textContent = stats.totalWords || 0;
-            document.getElementById('correctRate').textContent = (stats.correctRate || 0) + '%';
-            document.getElementById('completedLessons').textContent = completedLessons.size || 0;
-            document.getElementById('mistakesButton').textContent = `間違いリスト (${savedMistakes.length})`;
-        }
-
-        // 統計情報を保存
-        function saveStats(totalWords, correctAnswers) {
-            stats.totalWords = (stats.totalWords || 0) + totalWords;
-            stats.totalAnswers = (stats.totalAnswers || 0) + totalWords;
-            stats.correctAnswers = (stats.correctAnswers || 0) + correctAnswers;
-            stats.correctRate = stats.totalAnswers > 0 ? Math.round((stats.correctAnswers / stats.totalAnswers) * 100) : 0;
-            saveData();
-            loadStats();
-        }
-
-        // グローバル変数
+     // グローバル変数
         let currentMode = 'enToJp';
         let currentLesson = null;
         let currentQuiz = [];
@@ -2293,55 +2258,64 @@
             correctAnswers: 0
         };
         let savedMistakes = [];
-        let completedLessons = new Set(); // 完了したレッスンのIDを保存
+        let completedLessons = new Set();
+
+        // LocalStorageが利用できるかチェック
+        function isLocalStorageAvailable() {
+            try {
+                const test = 'localStorage_test';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
 
         // データを読み込み
         function loadData() {
             try {
-                // localStorageからデータを読み込み
-                const savedStats = localStorage.getItem('vocabAppStats');
-                if (savedStats) {
-                    stats = JSON.parse(savedStats);
-                }
-                
-                const savedMistakesData = localStorage.getItem('vocabAppMistakes');
-                if (savedMistakesData) {
-                    savedMistakes = JSON.parse(savedMistakesData);
-                }
-                
-                const savedCompletedLessons = localStorage.getItem('vocabAppCompletedLessons');
-                if (savedCompletedLessons) {
-                    completedLessons = new Set(JSON.parse(savedCompletedLessons));
+                if (isLocalStorageAvailable()) {
+                    const savedStats = localStorage.getItem('vocabAppStats');
+                    if (savedStats) {
+                        stats = JSON.parse(savedStats);
+                    }
+                    
+                    const savedMistakesData = localStorage.getItem('vocabAppMistakes');
+                    if (savedMistakesData) {
+                        savedMistakes = JSON.parse(savedMistakesData);
+                    }
+                    
+                    const savedCompletedLessons = localStorage.getItem('vocabAppCompletedLessons');
+                    if (savedCompletedLessons) {
+                        completedLessons = new Set(JSON.parse(savedCompletedLessons));
+                    }
+                } else {
+                    // sessionStorageを代替として使用
+                    const savedStats = sessionStorage.getItem('vocabAppStats');
+                    if (savedStats) {
+                        stats = JSON.parse(savedStats);
+                    }
+                    
+                    const savedMistakesData = sessionStorage.getItem('vocabAppMistakes');
+                    if (savedMistakesData) {
+                        savedMistakes = JSON.parse(savedMistakesData);
+                    }
+                    
+                    const savedCompletedLessons = sessionStorage.getItem('vocabAppCompletedLessons');
+                    if (savedCompletedLessons) {
+                        completedLessons = new Set(JSON.parse(savedCompletedLessons));
+                    }
                 }
             } catch (error) {
                 console.log('データの読み込みに失敗しました:', error);
-                // フォールバック: 初期値を設定
-                stats = {
-                    totalWords: 0,
-                    correctRate: 0,
-                    completedLessons: 0,
-                    totalAnswers: 0,
-                    correctAnswers: 0
-                };
-                savedMistakes = [];
-                completedLessons = new Set();
-            }
-        }
 
-        // データを保存
-        function saveData() {
-            try {
-                localStorage.setItem('vocabAppStats', JSON.stringify(stats));
-                localStorage.setItem('vocabAppMistakes', JSON.stringify(savedMistakes));
-                localStorage.setItem('vocabAppCompletedLessons', JSON.stringify([...completedLessons]));
-            } catch (error) {
-                console.log('データの保存に失敗しました:', error);
-                // localStorageが使用できない場合のフォールバック
-                window.vocabAppData = {
-                    stats: JSON.stringify(stats),
-                    mistakes: JSON.stringify(savedMistakes),
-                    completedLessons: JSON.stringify([...completedLessons])
-                };
+
+        function loadData() {
+            if (window.vocabAppData) {
+                stats = window.vocabAppData.stats;
+                savedMistakes = window.vocabAppData.savedMistakes;
+                completedLessons = new Set(window.vocabAppData.completedLessons);
             }
         }
 
@@ -2597,6 +2571,16 @@
             showModeSelection('mistakes');
         }
 
+        // 配列をシャッフル
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
         // クイズを開始
         function startQuiz() {
             // モードが選択されているかチェック
@@ -2607,11 +2591,25 @@
 
             // クイズデータを準備
             if (isFromMistakes) {
-                selectedQuizData = selectedMistakeItems.map(mistake => ({
-                    english: mistake.correctAnswer,
-                    japanese: mistake.question,
-                    type: mistake.type
-                }));
+                // 間違いリストから正しい形式でデータを作成
+                selectedQuizData = selectedMistakeItems.map(mistake => {
+                    const isEnToJpMode = currentMode === 'enToJp';
+                    if (isEnToJpMode) {
+                        // 英語→日本語の場合、questionが英語、correctAnswerが日本語
+                        return {
+                            english: mistake.question,
+                            japanese: mistake.correctAnswer,
+                            type: mistake.type
+                        };
+                    } else {
+                        // 日本語→英語の場合、questionが日本語、correctAnswerが英語
+                        return {
+                            english: mistake.correctAnswer,
+                            japanese: mistake.question,
+                            type: mistake.type
+                        };
+                    }
+                });
             } else if (currentLesson) {
                 selectedQuizData = [...currentLesson.words];
             } else {
@@ -2628,7 +2626,7 @@
             }
 
             // クイズデータをシャッフル
-            currentQuiz = shuffleArray([...selectedQuizData]).slice(0, Math.min(10, selectedQuizData.length));
+            currentQuiz = shuffleArray(selectedQuizData).slice(0, Math.min(10, selectedQuizData.length));
             currentQuestionIndex = 0;
             score = 0;
             mistakes = [];
@@ -2639,15 +2637,6 @@
             
             updateQuizHeader();
             showQuestion();
-        }
-
-        // 配列をシャッフル
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
         }
 
         // クイズヘッダーを更新
@@ -2707,7 +2696,11 @@
             input.className = 'typing-input';
             feedback.textContent = '';
             feedback.className = 'typing-feedback';
-            input.focus();
+            
+            // フォーカスを当てる
+            setTimeout(() => {
+                input.focus();
+            }, 100);
             
             // Enterキーでの送信
             input.onkeypress = function(e) {
@@ -2778,53 +2771,82 @@
             });
         }
 
-        // 選択肢を生成（改良版）
+        // 改良版選択肢生成（必ず4択、type別抽出）
         function generateOptions(correctQuestion, isEnToJp) {
             const correctAnswer = isEnToJp ? correctQuestion.japanese : correctQuestion.english;
+            const currentType = correctQuestion.type;
             
-            // 全レッスンから候補を収集
+            // 全レッスンから同じtypeの候補を収集
             const allWords = lessons.flatMap(lesson => lesson.words);
-            
-            // 現在の問題を除外
-            const candidates = allWords.filter(word => 
+            const sameTypeCandidates = allWords.filter(word => 
+                word.type === currentType &&
                 word.english !== correctQuestion.english && 
                 word.japanese !== correctQuestion.japanese
             );
             
-            // 同じタイプ（単語/熟語）を優先的に選択
-            const sameTypeCandidates = candidates.filter(word => word.type === correctQuestion.type);
-            const otherTypeCandidates = candidates.filter(word => word.type !== correctQuestion.type);
+            // 候補をシャッフル
+            const shuffledCandidates = shuffleArray(sameTypeCandidates);
             
-            // まずは同じタイプから選択、足りない場合は他のタイプからも選択
-            let selectedCandidates = [];
-            const shuffledSameType = shuffleArray([...sameTypeCandidates]);
-            const shuffledOtherType = shuffleArray([...otherTypeCandidates]);
+            let wrongOptions = [];
             
-            // 最大3つの間違いオプションを生成
-            selectedCandidates = [...shuffledSameType, ...shuffledOtherType].slice(0, 3);
-            
-            // 選択肢が足りない場合のフォールバック
-            if (selectedCandidates.length < 3) {
-                const fallbackOptions = [
-                    isEnToJp ? "該当なし" : "no match",
-                    isEnToJp ? "不明" : "unknown",
-                    isEnToJp ? "その他" : "other"
-                ];
+            // 同じtypeから3つの間違いオプションを取得
+            if (shuffledCandidates.length >= 3) {
+                wrongOptions = shuffledCandidates.slice(0, 3).map(candidate => 
+                    isEnToJp ? candidate.japanese : candidate.english
+                );
+            } else {
+                // 同じtypeの候補が不足している場合、まず利用可能な分を追加
+                wrongOptions = shuffledCandidates.map(candidate => 
+                    isEnToJp ? candidate.japanese : candidate.english
+                );
                 
-                while (selectedCandidates.length < 3) {
-                    selectedCandidates.push({
-                        english: fallbackOptions[selectedCandidates.length],
-                        japanese: fallbackOptions[selectedCandidates.length]
-                    });
+                // 不足分を他のtypeから補完
+                const otherTypeCandidates = allWords.filter(word => 
+                    word.type !== currentType &&
+                    word.english !== correctQuestion.english && 
+                    word.japanese !== correctQuestion.japanese
+                );
+                
+                const shuffledOtherType = shuffleArray(otherTypeCandidates);
+                const needed = 3 - wrongOptions.length;
+                
+                if (shuffledOtherType.length >= needed) {
+                    const additionalOptions = shuffledOtherType.slice(0, needed).map(candidate => 
+                        isEnToJp ? candidate.japanese : candidate.english
+                    );
+                    wrongOptions = wrongOptions.concat(additionalOptions);
+                } else {
+                    // さらに不足している場合はフォールバック選択肢を追加
+                    wrongOptions = wrongOptions.concat(shuffledOtherType.map(candidate => 
+                        isEnToJp ? candidate.japanese : candidate.english
+                    ));
+                    
+                    // まだ不足分をフォールバック選択肢で補完
+                    const fallbackOptions = currentType === 'phrase' ? [
+                        isEnToJp ? "該当する熟語なし" : "no matching phrase",
+                        isEnToJp ? "不明な表現" : "unknown expression", 
+                        isEnToJp ? "その他の熟語" : "other phrase",
+                        isEnToJp ? "見つからない表現" : "expression not found"
+                    ] : [
+                        isEnToJp ? "該当する単語なし" : "no matching word",
+                        isEnToJp ? "不明な単語" : "unknown word", 
+                        isEnToJp ? "その他の単語" : "other word",
+                        isEnToJp ? "見つからない単語" : "word not found"
+                    ];
+                    
+                    let fallbackIndex = 0;
+                    while (wrongOptions.length < 3 && fallbackIndex < fallbackOptions.length) {
+                        const fallbackOption = fallbackOptions[fallbackIndex];
+                        if (!wrongOptions.includes(fallbackOption)) {
+                            wrongOptions.push(fallbackOption);
+                        }
+                        fallbackIndex++;
+                    }
                 }
             }
             
-            const wrongOptions = selectedCandidates.map(candidate => 
-                isEnToJp ? candidate.japanese : candidate.english
-            );
-            
-            // 正解と間違いオプションを混ぜてシャッフル
-            const options = [correctAnswer, ...wrongOptions];
+            // 正解を含めて4つの選択肢を作成
+            const options = [correctAnswer, ...wrongOptions.slice(0, 3)];
             return shuffleArray(options);
         }
 
@@ -2902,7 +2924,7 @@
             // レッスン完了判定（80%以上で完了とする）
             if (currentLesson && percentage >= 80) {
                 markLessonAsCompleted(currentLesson.id);
-                if (!completedLessons.has(currentLesson.id)) {
+                if (percentage >= 80) {
                     resultText += '\n🎉 レッスン完了！';
                     document.getElementById('resultText').textContent = resultText;
                 }
@@ -2960,7 +2982,7 @@
                 savedMistakes = [];
                 saveData();
                 loadStats();
-                showMistakesList(); // リストを再表示
+                showMistakesList();
                 alert('間違いリストを消去しました。');
             }
         }
